@@ -1,0 +1,6 @@
+Avots: Our World in Data
+Datu kopas nosaukums: Share of the population using the Internet
+Saite: https://ourworldindata.org/grapher/share-of-individuals-using-the-internet?country=WB_SA~WB_NA~WB_SSA~WB_EAP&overlay=download-data
+Lejupielādes datums: 11.11.2026
+License: Creative Commons Attribution 4.0 International (CC BY 4.0)
+Sākotnējo datu avots: International Telecommunication Union (ITU), izmantojot World Bank – World Development Indicators
