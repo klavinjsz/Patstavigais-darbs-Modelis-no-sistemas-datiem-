@@ -1,5 +1,5 @@
 
-import pandas as pd
+import pandas as pd        # Importē bibliotēku kas lauj strādāt ar CSV failiem tostarp tos nolasīt, apstrādāt un izveidot jaunus
 from pathlib import Path
 
 # Nosaka projekta mapes atrašanās vietu.
