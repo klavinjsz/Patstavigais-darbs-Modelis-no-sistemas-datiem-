@@ -2,83 +2,64 @@
 import pandas as pd        # Importē bibliotēku kas lauj strādāt ar CSV failiem tostarp tos nolasīt, apstrādāt un izveidot jaunus
 from pathlib import Path
 
-# Nosaka projekta mapes atrašanās vietu.
-"Patstavigais-darbs-Modelis-no-sistemas-datiem-" = Path(__file__).parent
-datu_mape = "Patstavigais-darbs-Modelis-no-sistemas-datiem-" / "dati"
+# Nosaka projekta mapes un sākotnējā CSV faila atrašanās vietu.
+projekta_mape = Path(__file__).parent
+datu_mape = projekta_mape / "dati"
 
-# Atrod CSV failu datu mapē, neiekļaujot jau sagatavoto failu.
-csv_faili = [
-    fails for fails in datu_mape.glob("*.csv")
-    if fails.name.lower() != "tirs.csv"
-]
+csv_faili = list(datu_mape.glob("*.csv"))
 
-if not csv_faili:
-    raise FileNotFoundError("Mapē 'dati' nav atrasts sākotnējais CSV fails.")
-
-if len(csv_faili) > 1:
-    raise RuntimeError("Mapē 'dati' ir vairāki CSV faili. Atstāj vienu sākotnējo datu failu.")
+if len(csv_faili) != 1:
+    raise RuntimeError("Mapē 'dati' jābūt tieši vienam CSV failam.")
 
 ievades_fails = csv_faili[0]
-izvades_fails = "Patstavigais-darbs-Modelis-no-sistemas-datiem-" / "tirs.csv"      # Nosaka ka izvades fails būs īstajā mapē un to sauks tirs.csv
+izvades_fails = projekta_mape / "tirs.csv"
 
-# Nolasa sākotnējos datus, izmantojot UTF-8 kodējumu.
+# Nolasa sākotnējos datus, nemainot oriģinālo failu.
 df = pd.read_csv(ievades_fails)
 
 sakuma_rindu_skaits = len(df)
 
 print("Sākotnējais fails:", ievades_fails.name)
 print("Rindu skaits pirms tīrīšanas:", sakuma_rindu_skaits)
-print("\nSākotnējo datu informācija:")
-print(df.info())
 
-# Pārvērš gadu skaitliskā formātā, jo tas nepieciešams datu analīzei.
+# Pārvērš gadu un interneta lietošanas rādītāju skaitliskā formātā.
 df["Year"] = pd.to_numeric(df["Year"], errors="coerce")
 
-# Noņem rindas bez gada, jo bez laika informācijas nav iespējams korekti analizēt rādītāju attīstību.
-df = df.dropna(subset=["Year"])
+merka_kolonna = "Share of the population using the Internet"
+df[merka_kolonna] = pd.to_numeric(df[merka_kolonna], errors="coerce")
 
-# Atrod interneta lietošanas rādītāja kolonnu.
-merka_kolonnas = [
-    kolonna for kolonna in df.columns
-    if "Share of the population using the Internet" in kolonna.lower()
-]
+# Saglabā tikai ierakstus no 1990. līdz 2020. gadam.
+df = df[df["Year"].between(1990, 2020)]
 
-if len(merka_kolonnas) != 1:
-    raise ValueError(
-        "Neizdevās viennozīmīgi atrast interneta lietošanas rādītāja kolonnu."
-    )
+# Izveido visu nepieciešamo gadu sarakstu no 1990. līdz 2020. gadam.
+nepieciesamie_gadi = set(range(1990, 2021))
 
-merka_kolonna = merka_kolonnas[0]
+# Pārbauda, vai katrai valstij ir dati par visiem 31 gadiem.
+pilnigas_valstis = []
 
-# Pārvērš interneta lietošanas procentus skaitliskā formātā.
-df[merka_kolonna] = pd.to_numeric(
-    df[merka_kolonna], errors="coerce"
-)
+for valsts, dati in df.groupby("Entity"):
+    valsts_gadi = set(dati["Year"].astype(int))
 
-# Izņem rindas bez interneta lietošanas rādītāja, jo tās nevar izmantot tā analīzei vai prognozēšanai.
-df = df.dropna(subset=[merka_kolonna])
+    # Atzīmē tās valstis, kurām nav iztrūkstošu gadu.
+    if valsts_gadi == nepieciesamie_gadi:
+        pilnigas_valstis.append(valsts)
 
-# Izņem dublikātus, jo vienai valstij vai reģionam vienā gadā jābūt tikai vienam rādītājam.
-df = df.drop_duplicates(subset=["Entity", "Year"])
+# Izņem visas valstis, kurām trūkst dati izvēlētajā periodā.
+df = df[df["Entity"].isin(pilnigas_valstis)]
 
-# Izņem ierakstus ar neiespējamām procentu vērtībām (ja tādas ir), jo interneta lietotāju īpatsvars nevar būt ārpus 0–100%.
-df = df[
-    df[merka_kolonna].between(0, 100)
-]
-
-# Sakārto datus pēc reģiona un gada, lai tos būtu vieglāk analizēt.
+# Sakārto datus pēc valsts un gada.
 df = df.sort_values(by=["Entity", "Year"])
 
-# Saglabā sakārtotos datus jaunā CSV failā, nemainot oriģinālo datu kopu.
+# Saglabā rezultātu jaunā CSV failā.
 df.to_csv(izvades_fails, index=False, encoding="utf-8")
 
 beigu_rindu_skaits = len(df)
 
-print("\nDatu tīrīšanas rezultāts:")
+# Izvada tīrīšanas rezultātus.
+print("\n--- Datu tīrīšanas rezultāts ---")
 print("Rindu skaits pirms tīrīšanas:", sakuma_rindu_skaits)
 print("Rindu skaits pēc tīrīšanas:", beigu_rindu_skaits)
 print("Noņemtās rindas:", sakuma_rindu_skaits - beigu_rindu_skaits)
-print("Sagatavotais fails:", izvades_fails)
+print("Pilnīgo valstu skaits:", len(pilnigas_valstis))
 
-print("\nSakārtoto datu informācija:")
-print(df.info())
+print("\nFails saglabāts:", izvades_fails)
