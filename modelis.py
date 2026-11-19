@@ -94,4 +94,4 @@ else:
     print("\nSecinājums: Modelis nepārspēj bāzes līniju.")
 
 print("\nPrognozējamo klašu sadalījums:")
-print(y.value_counts()) 
+print(y.value_counts().to_string())
