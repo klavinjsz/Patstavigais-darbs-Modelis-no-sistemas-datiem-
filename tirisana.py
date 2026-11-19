@@ -3,8 +3,8 @@ import pandas as pd
 from pathlib import Path
 
 # Nosaka projekta mapes atrašanās vietu.
-"Patstavigais-darbs-Modelis-no-sistemas-datiem" = Path(__file__).parent
-datu_mape = "Patstavigais-darbs-Modelis-no-sistemas-datiem" / "dati"
+"Patstavigais-darbs-Modelis-no-sistemas-datiem-" = Path(__file__).parent
+datu_mape = "Patstavigais-darbs-Modelis-no-sistemas-datiem-" / "dati"
 
 # Atrod CSV failu datu mapē, neiekļaujot jau sagatavoto failu.
 csv_faili = [
@@ -19,7 +19,7 @@ if len(csv_faili) > 1:
     raise RuntimeError("Mapē 'dati' ir vairāki CSV faili. Atstāj vienu sākotnējo datu failu.")
 
 ievades_fails = csv_faili[0]
-izvades_fails = "Patstavigais-darbs-Modelis-no-sistemas-datiem" / "tirs.csv"      # Nosaka ka izvades fails būs īstajā mapē un to sauks tirs.csv
+izvades_fails = "Patstavigais-darbs-Modelis-no-sistemas-datiem-" / "tirs.csv"      # Nosaka ka izvades fails būs īstajā mapē un to sauks tirs.csv
 
 # Nolasa sākotnējos datus, izmantojot UTF-8 kodējumu.
 df = pd.read_csv(ievades_fails)
